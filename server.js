@@ -13,11 +13,11 @@ const port = 3000;
 const app = express(); //() are required!!!
 
 //read the file
-let recipies = [];
-const recipePath = path.join(__dirname, 'recipies.json');
+let recipes = [];
+const recipePath = path.join(__dirname, 'recipes.json');
 
 //save 
-function saveRecipies(data) {
+function saveRecipes(data) {
     return new Promise((resolve, reject) => {
         const jsonContent = JSON.stringify(data, null, 4); // Pretty print
         fs.writeFile(recipePath, jsonContent, 'utf8', (error) => {
@@ -33,19 +33,19 @@ function saveRecipies(data) {
 
 //getNewId
 function getNewId() {
-    if (recipies.length === 0) return 1;
-    const maxId = recipies.reduce((max, item) => Math.max(max, item.Id || 0), 0); //gets all items in array and returns max Id field
+    if (recipes.length === 0) return 1;
+    const maxId = recipes.reduce((max, item) => Math.max(max, item.Id || 0), 0); //gets all items in array and returns max Id field
     return maxId + 1;
 }
 
 //Load data
 try {
     const data = fs.readFileSync(recipePath, 'utf-8');
-    recipies = JSON.parse(data);
-    console.log(`Loaded ${recipies.length} recipies`);
+    recipes = JSON.parse(data);
+    console.log(`Loaded ${recipes.length} recipes`);
 }
 catch (error) {
-    recipies = { Error: "Failed to load recipie file"};
+    recipes = { Error: "Failed to load recipie file"};
     console.error(`Error loading recipie file: ${error.message}`);
 }
 
@@ -68,30 +68,33 @@ app.use((request, response, next) => {
 });
 
 // NEW ROOT HANDLER: Inform the user where the API lives
-// This would be used in browsers, and is before setting /recipies
+// This would be used in browsers, and is before setting /recipes
 app.get('/', (request, response) => {
     response.status(200).json({
-        message: "Welcome to the Recipies API!",
-        instructions: "All API endpoints are located under the /recipies path.",
+        message: "Welcome to the Recipes API!",
+        instructions: "All API endpoints are located under the /recipes path.",
         endpoints: {
-            "GET /recipies": "Retrieve all recipes.",
-            "POST /recipies": "Create a new recipe.",
-            "GET /recipies/:Id": "Retrieve a single recipe.",
-            "DELETE /recipies/:Id": "Delete a recipe by ID.",
-            "DELETE /recipies/name/:Name": "Delete a recipe by Name."
+            "GET /recipes": "Retrieve all recipes.",
+            "POST /recipes": "Create a new recipe.",
+            "PUT /recipes/:Id": "Update a recipe by ID.",
+            "PUT /recipes/name/:Name": "Update a recipe by Name.",
+            "GET /recipes/:Id": "Retrieve a single recipe.",
+            "GET /recipes/ingredients/:SearchTerm": "Retrieve recipes matching a partial ingredient search.",
+            "DELETE /recipes/:Id": "Delete a recipe by ID.",
+            "DELETE /recipes/name/:Name": "Delete a recipe by Name."
         }
     });
 });
 
 const router = express.Router();
 
-// READ ALL (GET /recipies)
+// READ ALL (GET /recipes)
 router.get('/', (request, response) => {
-    response.status(200).json(recipies);
+    response.status(200).json(recipes);
 });
 
 
-// CREATE (POST /recipies) Add a new recipe with the next ID
+// CREATE (POST /recipes) Add a new recipe with the next ID
 router.post('/', async (request, response) => {
     try {
         const newItem = request.body; 
@@ -114,10 +117,10 @@ router.post('/', async (request, response) => {
         };
 
         // Update in-memory data
-        recipies.push(newItem);
+        recipes.push(newItem);
         
         // Persist data to file
-        await saveRecipies(recipies);
+        await saveRecipes(recipes);
         
         // Respond with the created item
         response.status(201).json(newItem); // 201 Created status
@@ -128,10 +131,10 @@ router.post('/', async (request, response) => {
     }
 });
 
-// READ ONE (GET recipies/:Id)
+// READ ONE (GET recipes/:Id)
 router.get('/:Id', (request, response) => {
     const id = parseInt(request.params.Id); 
-    const recipe = recipies.find(item => item.Id === id);
+    const recipe = recipes.find(item => item.Id === id);
 
     if (!recipe) {
         return response.status(404).json({ message: `Recipe with ID ${id} not found.` });
@@ -142,7 +145,7 @@ router.get('/:Id', (request, response) => {
 
 router.get('name/:Name', (request, response) => {
     const name = decodeURIComponent(request.params.Name); 
-    const recipe = recipies.find(item => item.Name === name);
+    const recipe = recipes.find(item => item.Name === name);
 
     if (!recipe) {
         return response.status(404).json({ message: `Recipe with ID ${name} not found.` });
@@ -151,19 +154,42 @@ router.get('name/:Name', (request, response) => {
     response.status(200).json(recipe);
 });
 
+// GET RECIPES BY INGREDIENT
+router.get('/ingredients/:SearchTerm', (request, response) => {
+    const searchTerm = decodeURIComponent(request.params.SearchTerm).toLowerCase();
+    
+    // Filter recipes where at least one ingredient contains the search term
+    const matchingRecipes = recipes.filter(recipe => {
+        // Ensure ingredients is an array before trying to search
+        if (!Array.isArray(recipe.ingredients)) {
+            return false;
+        }
 
-// UPDATE BY ID (PUT /recipies/:Id) 
+        return recipe.ingredients.some(ingredient => {
+            // Check if the lowercase ingredient string contains the lowercase search term
+            return ingredient.toLowerCase().includes(searchTerm);
+        });
+    });
+
+    if (matchingRecipes.length === 0) {
+        return response.status(404).json({ message: `No recipes found containing ingredient fragment: "${searchTerm}"` });
+    }
+    
+    response.status(200).json(matchingRecipes);
+});
+
+// UPDATE BY ID (PUT /recipes/:Id) 
 router.put('/:Id', async (request, response) => {
     try {
         const id = parseInt(request.params.Id);
-        const index = recipies.findIndex(item => item.Id === id);
+        const index = recipes.findIndex(item => item.Id === id);
 
         if (index === -1) {
             return response.status(404).json({ message: `Recipe with ID ${id} not found.` });
         }
 
         // Merge existing item with new data from request body
-        const existingRecipe = recipies[index];
+        const existingRecipe = recipes[index];
         const updatedRecipe = { 
             ...existingRecipe, 
             ...request.body 
@@ -181,10 +207,10 @@ router.put('/:Id', async (request, response) => {
         if (updatedRecipe.suggestedPrice) updatedRecipe.suggestedPrice = parseFloat(updatedRecipe.suggestedPrice);
 
         // Update in-memory array
-        recipies[index] = updatedRecipe;
+        recipes[index] = updatedRecipe;
 
         // Persist data to file
-        await saveRecipies(recipies);
+        await saveRecipes(recipes);
 
         response.status(200).json(updatedRecipe); // 200 OK status
 
@@ -194,20 +220,20 @@ router.put('/:Id', async (request, response) => {
     }
 });
 
-// UPDATE BY NAME (PUT /recipies/name/:Name) 
+// UPDATE BY NAME (PUT /recipes/name/:Name) 
 router.put('/name/:Name', async (request, response) => {
     try {
         const name = decodeURIComponent(request.params.Name);
         const nameLowerCase = name.toLowerCase();
         
-        const index = recipies.findIndex(item => item.Name.toLowerCase() === nameLowerCase);
+        const index = recipes.findIndex(item => item.Name.toLowerCase() === nameLowerCase);
 
         if (index === -1) {
             return response.status(404).json({ message: `Recipe with Name "${name}" not found.` });
         }
 
         // Merge existing item with new data from request body
-        const existingRecipe = recipies[index];
+        const existingRecipe = recipes[index];
         const updatedRecipe = { 
             ...existingRecipe, 
             ...request.body 
@@ -227,10 +253,10 @@ router.put('/name/:Name', async (request, response) => {
         if (updatedRecipe.suggestedPrice) updatedRecipe.suggestedPrice = parseFloat(updatedRecipe.suggestedPrice);
 
         // Update in-memory array
-        recipies[index] = updatedRecipe;
+        recipes[index] = updatedRecipe;
 
         // Persist data to file
-        await saveRecipies(recipies);
+        await saveRecipes(recipes);
 
         response.status(200).json(updatedRecipe); // 200 OK status
 
@@ -245,17 +271,17 @@ router.put('/name/:Name', async (request, response) => {
 router.delete('/:Id', async (request, response) => {
     try {
         const id = parseInt(request.params.Id);
-        const initialLength = recipies.length;
+        const initialLength = recipes.length;
         
         // Filter out the recipe with the matching ID
-        recipies = recipies.filter(item => item.Id !== id);
+        recipes = recipes.filter(item => item.Id !== id);
 
-        if (recipies.length === initialLength) {
+        if (recipes.length === initialLength) {
             // If the array length hasn't changed, the item wasn't found
             return response.status(404).json({ message: `Recipe with ID ${id} not found.` });
         }
 
-        await saveRecipies(recipies); // Save the filtered array
+        await saveRecipes(recipes); // Save the filtered array
         
         // 204 No Content is the standard response for successful deletion
         response.sendStatus(204); 
@@ -267,22 +293,22 @@ router.delete('/:Id', async (request, response) => {
 });
 
 
-// DELETE BY NAME (DELETE /recipies/name/:Name) - Secondary deletion method
+// DELETE BY NAME (DELETE /recipes/name/:Name) - Secondary deletion method
 router.delete('/name/:Name', async (request, response) => {
     try {
         const name = decodeURIComponent(request.params.Name);
         const nameLowerCase = name.toLowerCase();
-        const initialLength = recipies.length;
+        const initialLength = recipes.length;
 
         // Filter out the recipe with the matching Name (case-insensitive search)
-        recipies = recipies.filter(item => item.Name.toLowerCase() !== nameLowerCase);
+        recipes = recipes.filter(item => item.Name.toLowerCase() !== nameLowerCase);
 
-        if (recipies.length === initialLength) {
+        if (recipes.length === initialLength) {
             // If the array length hasn't changed, the item wasn't found
             return response.status(404).json({ message: `Recipe with Name "${name}" not found.` });
         }
 
-        await saveRecipies(recipies); // Save the filtered array
+        await saveRecipes(recipes); // Save the filtered array
         
         response.sendStatus(204); 
 
@@ -294,7 +320,7 @@ router.delete('/name/:Name', async (request, response) => {
 
 
 
-app.use('/recipies', router); //not root, recipies
+app.use('/recipes', router); //not root, recipes
 
 //last route so failed
 app.use((request, response) => {
@@ -303,5 +329,5 @@ app.use((request, response) => {
 
 app.listen(port, () => {
     console.log(`Express Server running at http://localhost:${port}/`);
-    console.log('API routes: /recipies, /recipies/name');
+    console.log('API routes: /recipes, /recipes/name');
 });

@@ -12,12 +12,13 @@ Think I have Post to create, checking curl command
 Yes post worked using curl
 Delete through curl worked.
 Put through curl worked.
+Get by ingredient worked.
 
-
+Have other things to do, but would like to add ejs pages if possible in the future.
 
 Criteria    Complete 5 points   Missing 0 points    Criterion Score
-Get endpoint with filtering Score of Get endpoint with filtering,  2 / 5
+Get endpoint with filtering Score of Get endpoint with filtering,  5 / 5
 put endpoint for updates    Score of put endpoint for updates,     5 / 5
 post update for creating    Score of post update for creating,     5 / 5
 delete endpoint deleting    Score of delete endpoint for deleting, 5 / 5
-Total   Score of Project 2,                                       17 / 20
+Total   Score of Project 2,                                       20 / 20
