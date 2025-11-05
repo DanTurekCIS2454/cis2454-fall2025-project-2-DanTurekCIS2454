@@ -18,24 +18,6 @@
         "suggestedPrice": 12.99
     },
     {
-        "Id": 2,
-        "Name": "Spicy Thai Green Curry",
-        "Styles": [
-            "Thai",
-            "Spicy",
-            "Vegan (Optional)"
-        ],
-        "ingredients": [
-            "Green Curry Paste",
-            "Coconut Milk (1 can)",
-            "Tofu or Chicken",
-            "Bamboo Shoots",
-            "Basmati Rice"
-        ],
-        "wholesaleCost": 6.2,
-        "suggestedPrice": 16.5
-    },
-    {
         "Id": 3,
         "Name": "Grilled Halloumi Salad",
         "Styles": [

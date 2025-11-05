@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const { request } = require('http');
+//const { request } = require('http'); ??? I didn't cut/paste so how is it here?
 
 //const hostname = '127.0.0.1'; not used by express
 const port = 3000;
@@ -65,15 +65,31 @@ app.use((request, response, next) => {
     next();
 });
 
+// NEW ROOT HANDLER: Inform the user where the API lives
+// This would be used in browsers, and is before setting /recipies
+app.get('/', (request, response) => {
+    response.status(200).json({
+        message: "Welcome to the Recipies API!",
+        instructions: "All API endpoints are located under the /recipies path.",
+        endpoints: {
+            "GET /recipies": "Retrieve all recipes.",
+            "POST /recipies": "Create a new recipe.",
+            "GET /recipies/:Id": "Retrieve a single recipe.",
+            "DELETE /recipies/:Id": "Delete a recipe by ID.",
+            "DELETE /recipies/name/:Name": "Delete a recipe by Name."
+        }
+    });
+});
+
 const router = express.Router();
 
-// READ ALL (GET /menu)
+// READ ALL (GET /recipies)
 router.get('/', (request, response) => {
     response.status(200).json(recipies);
 });
 
 
-// CREATE (POST /) Add a new recipe with the next ID
+// CREATE (POST /recipies) Add a new recipe with the next ID
 router.post('/', async (request, response) => {
     try {
         const newItem = request.body; 
@@ -110,7 +126,83 @@ router.post('/', async (request, response) => {
     }
 });
 
-app.use('/', router);
+// 3. READ ONE (GET recipies/:Id)
+router.get('/:Id', (request, response) => {
+    const id = parseInt(request.params.Id); 
+    const recipe = recipies.find(item => item.Id === id);
+
+    if (!recipe) {
+        return response.status(404).json({ message: `Recipe with ID ${id} not found.` });
+    }
+    
+    response.status(200).json(recipe);
+});
+
+router.get('name/:Name', (request, response) => {
+    const name = request.params.Name; 
+    const recipe = recipies.find(item => item.Name === name);
+
+    if (!recipe) {
+        return response.status(404).json({ message: `Recipe with ID ${name} not found.` });
+    }
+    
+    response.status(200).json(recipe);
+});
+
+// 4. DELETE BY ID (DELETE /:Id) - Standard RESTful deletion
+router.delete('/:Id', async (request, response) => {
+    try {
+        const id = parseInt(request.params.Id);
+        const initialLength = recipies.length;
+        
+        // Filter out the recipe with the matching ID
+        recipies = recipies.filter(item => item.Id !== id);
+
+        if (recipies.length === initialLength) {
+            // If the array length hasn't changed, the item wasn't found
+            return response.status(404).json({ message: `Recipe with ID ${id} not found.` });
+        }
+
+        await saveRecipies(recipies); // Save the filtered array
+        
+        // 204 No Content is the standard response for successful deletion
+        response.sendStatus(204); 
+
+    } catch (error) {
+        console.error("DELETE /:Id error:", error.message);
+        response.status(500).json({ message: `Server error: ${error.message}` });
+    }
+});
+
+
+// 5. DELETE BY NAME (DELETE /recipies/name/:Name) - Secondary deletion method
+router.delete('/name/:Name', async (request, response) => {
+    try {
+        const name = request.params.Name;
+        const nameLowerCase = name.toLowerCase();
+        const initialLength = recipies.length;
+
+        // Filter out the recipe with the matching Name (case-insensitive search)
+        recipies = recipies.filter(item => item.Name.toLowerCase() !== nameLowerCase);
+
+        if (recipies.length === initialLength) {
+            // If the array length hasn't changed, the item wasn't found
+            return response.status(404).json({ message: `Recipe with Name "${name}" not found.` });
+        }
+
+        await saveRecipies(recipies); // Save the filtered array
+        
+        response.sendStatus(204); 
+
+    } catch (error) {
+        console.error("DELETE /name/:Name error:", error.message);
+        response.status(500).json({ message: `Server error: ${error.message}` });
+    }
+});
+
+
+
+app.use('/recipies', router); //not root, recipies
 
 //last route so failed
 app.use((request, response) => {
@@ -119,5 +211,5 @@ app.use((request, response) => {
 
 app.listen(port, () => {
     console.log(`Express Server running at http://localhost:${port}/`);
-    console.log('API routes: /');
+    console.log('API routes: /recipies, /recipies/name');
 });
