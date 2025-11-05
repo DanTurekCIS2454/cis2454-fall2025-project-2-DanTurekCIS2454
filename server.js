@@ -1,5 +1,7 @@
 //server.js
 
+console.log("Server attempt to start at " + Date().toLocaleString());
+
 //const http = require('http'); replaced by express
 const fs = require('fs');
 const path = require('path');
@@ -126,7 +128,7 @@ router.post('/', async (request, response) => {
     }
 });
 
-// 3. READ ONE (GET recipies/:Id)
+// READ ONE (GET recipies/:Id)
 router.get('/:Id', (request, response) => {
     const id = parseInt(request.params.Id); 
     const recipe = recipies.find(item => item.Id === id);
@@ -139,7 +141,7 @@ router.get('/:Id', (request, response) => {
 });
 
 router.get('name/:Name', (request, response) => {
-    const name = request.params.Name; 
+    const name = decodeURIComponent(request.params.Name); 
     const recipe = recipies.find(item => item.Name === name);
 
     if (!recipe) {
@@ -149,7 +151,97 @@ router.get('name/:Name', (request, response) => {
     response.status(200).json(recipe);
 });
 
-// 4. DELETE BY ID (DELETE /:Id) - Standard RESTful deletion
+
+// UPDATE BY ID (PUT /recipies/:Id) 
+router.put('/:Id', async (request, response) => {
+    try {
+        const id = parseInt(request.params.Id);
+        const index = recipies.findIndex(item => item.Id === id);
+
+        if (index === -1) {
+            return response.status(404).json({ message: `Recipe with ID ${id} not found.` });
+        }
+
+        // Merge existing item with new data from request body
+        const existingRecipe = recipies[index];
+        const updatedRecipe = { 
+            ...existingRecipe, 
+            ...request.body 
+        };
+
+        // Preserve the original Id and Name, preventing modification via PUT body
+        updatedRecipe.Id = existingRecipe.Id;
+        if (request.body.Name) {
+            updatedRecipe.Name = request.body.Name; //existingRecipe.Name;
+            console.log(`Warning, name changed from ${existingRecipe.Name} to ${updatedRecipe.Name}`);
+        }; // Typically Name is not modified in a PUT by ID, but good practice to preserve it.
+
+        // Ensure numerical fields are correctly parsed from string inputs
+        if (updatedRecipe.wholesaleCost) updatedRecipe.wholesaleCost = parseFloat(updatedRecipe.wholesaleCost);
+        if (updatedRecipe.suggestedPrice) updatedRecipe.suggestedPrice = parseFloat(updatedRecipe.suggestedPrice);
+
+        // Update in-memory array
+        recipies[index] = updatedRecipe;
+
+        // Persist data to file
+        await saveRecipies(recipies);
+
+        response.status(200).json(updatedRecipe); // 200 OK status
+
+    } catch (error) {
+        console.error("PUT /:Id error:", error.message);
+        response.status(500).json({ message: `Server error: ${error.message}` });
+    }
+});
+
+// UPDATE BY NAME (PUT /recipies/name/:Name) 
+router.put('/name/:Name', async (request, response) => {
+    try {
+        const name = decodeURIComponent(request.params.Name);
+        const nameLowerCase = name.toLowerCase();
+        
+        const index = recipies.findIndex(item => item.Name.toLowerCase() === nameLowerCase);
+
+        if (index === -1) {
+            return response.status(404).json({ message: `Recipe with Name "${name}" not found.` });
+        }
+
+        // Merge existing item with new data from request body
+        const existingRecipe = recipies[index];
+        const updatedRecipe = { 
+            ...existingRecipe, 
+            ...request.body 
+        };
+
+        // Preserve the original Id and Name, preventing modification
+        updatedRecipe.Id = existingRecipe.Id;
+        updatedRecipe.Name = existingRecipe.Name;
+
+        if (existingRecipe.Name != name)
+        {
+            console.log(`Warning, cannot change name through /name request for ${existingRecipe.Name}`);
+        }
+
+        // Ensure numerical fields are correctly parsed from string inputs
+        if (updatedRecipe.wholesaleCost) updatedRecipe.wholesaleCost = parseFloat(updatedRecipe.wholesaleCost);
+        if (updatedRecipe.suggestedPrice) updatedRecipe.suggestedPrice = parseFloat(updatedRecipe.suggestedPrice);
+
+        // Update in-memory array
+        recipies[index] = updatedRecipe;
+
+        // Persist data to file
+        await saveRecipies(recipies);
+
+        response.status(200).json(updatedRecipe); // 200 OK status
+
+    } catch (error) {
+        console.error("PUT /name/:Name error:", error.message);
+        response.status(500).json({ message: `Server error: ${error.message}` });
+    }
+});
+
+
+// DELETE BY ID (DELETE /:Id) - Standard RESTful deletion
 router.delete('/:Id', async (request, response) => {
     try {
         const id = parseInt(request.params.Id);
@@ -175,10 +267,10 @@ router.delete('/:Id', async (request, response) => {
 });
 
 
-// 5. DELETE BY NAME (DELETE /recipies/name/:Name) - Secondary deletion method
+// DELETE BY NAME (DELETE /recipies/name/:Name) - Secondary deletion method
 router.delete('/name/:Name', async (request, response) => {
     try {
-        const name = request.params.Name;
+        const name = decodeURIComponent(request.params.Name);
         const nameLowerCase = name.toLowerCase();
         const initialLength = recipies.length;
 

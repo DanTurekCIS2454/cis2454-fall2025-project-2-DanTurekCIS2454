@@ -11,12 +11,13 @@ Read file. Display full Get JSON on start.
 Think I have Post to create, checking curl command
 Yes post worked using curl
 Delete through curl worked.
+Put through curl worked.
 
 
 
 Criteria    Complete 5 points   Missing 0 points    Criterion Score
 Get endpoint with filtering Score of Get endpoint with filtering,  2 / 5
-put endpoint for updates    Score of put endpoint for updates,     0 / 5
+put endpoint for updates    Score of put endpoint for updates,     5 / 5
 post update for creating    Score of post update for creating,     5 / 5
 delete endpoint deleting    Score of delete endpoint for deleting, 5 / 5
-Total   Score of Project 2,                                       12 / 20
+Total   Score of Project 2,                                       17 / 20

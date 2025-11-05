@@ -36,6 +36,7 @@
         "suggestedPrice": 14
     },
     {
+        "Id": 4,
         "Name": "Lemon Garlic Pasta",
         "Styles": [
             "Italian",
@@ -49,5 +50,22 @@
         ],
         "wholesaleCost": 3.5,
         "suggestedPrice": 11
+    },
+    {
+        "Id": 6,
+        "Name": "American Burger",
+        "Styles": [
+            "American",
+            "Lunch"
+        ],
+        "ingredients": [
+            "Ground Beef",
+            "Bun",
+            "Lettuce",
+            "Tomato",
+            "Onion"
+        ],
+        "wholesaleCost": 3,
+        "suggestedPrice": 9.99
     }
 ]
