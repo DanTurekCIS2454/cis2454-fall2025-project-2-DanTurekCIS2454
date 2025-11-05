@@ -65,13 +65,49 @@ app.use((request, response, next) => {
     next();
 });
 
-
 const router = express.Router();
 
-
-// 1. READ ALL (GET /menu)
+// READ ALL (GET /menu)
 router.get('/', (request, response) => {
     response.status(200).json(recipies);
+});
+
+
+// CREATE (POST /) Add a new recipe with the next ID
+router.post('/', async (request, response) => {
+    try {
+        const newItem = request.body; 
+
+        // validation 
+        if (!newItem.Name || !newItem.ingredients) {
+            return response.status(400).json({ 
+                message: "Missing required fields (Name/Ingredients)." 
+            });
+        }
+
+        // Assign Id
+        const newRecipie = {
+            Id: getNewId(),
+            Name: newItem.Name,
+            Styles: newItem.Styles || [],
+            ingredients: newItem.ingredients || [],
+            wholesaleCost: parseFloat(newItem.wholesaleCost) || null, // Ensure it's a number or blank
+            suggestedPrice: parseFloat(newItem.suggestedPrice) || null 
+        };
+
+        // Update in-memory data
+        recipies.push(newItem);
+        
+        // Persist data to file
+        await saveRecipies(recipies);
+        
+        // Respond with the created item
+        response.status(201).json(newItem); // 201 Created status
+
+    } catch (error) {
+        console.error("POST error:", error.message);
+        response.status(500).json({ message: `Error: ${error.message}` });
+    }
 });
 
 app.use('/', router);

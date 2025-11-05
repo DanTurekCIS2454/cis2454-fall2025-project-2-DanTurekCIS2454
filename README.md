@@ -8,11 +8,14 @@ Forgot to keep updating the log in that one, so hoping to remember for this one.
 
 Read file. Display full Get JSON on start.
 
+Think I have Post to create, checking curl command
+Yes post worked using curl
+
 
 
 Criteria    Complete 5 points   Missing 0 points    Criterion Score
-Get endpoint with filtering Score of Get endpoint with filtering,/ 5
-put endpoint for updates    Score of put endpoint for updates,/ 5
-post update for creating    Score of post update for creating,/ 5
-delete endpoint for deleting    Score of delete endpoint for deleting,/ 5
-Total   Score of Project 2,/ 20
+Get endpoint with filtering Score of Get endpoint with filtering,  1 / 5
+put endpoint for updates    Score of put endpoint for updates,     0 / 5
+post update for creating    Score of post update for creating,     5 / 5
+delete endpoint deleting    Score of delete endpoint for deleting, 0 / 5
+Total   Score of Project 2,                                        6 / 20
