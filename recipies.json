@@ -1,5 +1,6 @@
 [
 {
+"Id": 1, 
 "Name": "Classic French Onion Soup",
 "Styles": ["French", "Comfort Food", "Vegetarian"],
 "ingredients": [
@@ -13,6 +14,7 @@
 "suggestedPrice": 12.99
 },
 {
+"Id": 2, 
 "Name": "Spicy Thai Green Curry",
 "Styles": ["Thai", "Spicy", "Vegan (Optional)"],
 "ingredients": [
@@ -26,6 +28,7 @@
 "suggestedPrice": 16.50
 },
 {
+"Id": 3, 
 "Name": "Grilled Halloumi Salad",
 "Styles": ["Mediterranean", "Healthy", "Summer"],
 "ingredients": [
