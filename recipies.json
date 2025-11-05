@@ -1,0 +1,41 @@
+[
+{
+"Name": "Classic French Onion Soup",
+"Styles": ["French", "Comfort Food", "Vegetarian"],
+"ingredients": [
+"Onions (3 lbs)",
+"Beef Broth (6 cups)",
+"Dry White Wine (1/2 cup)",
+"Baguette slices",
+"Gruyere Cheese"
+],
+"wholesaleCost": 4.50,
+"suggestedPrice": 12.99
+},
+{
+"Name": "Spicy Thai Green Curry",
+"Styles": ["Thai", "Spicy", "Vegan (Optional)"],
+"ingredients": [
+"Green Curry Paste",
+"Coconut Milk (1 can)",
+"Tofu or Chicken",
+"Bamboo Shoots",
+"Basmati Rice"
+],
+"wholesaleCost": 6.20,
+"suggestedPrice": 16.50
+},
+{
+"Name": "Grilled Halloumi Salad",
+"Styles": ["Mediterranean", "Healthy", "Summer"],
+"ingredients": [
+"Halloumi Cheese",
+"Mixed Greens",
+"Cherry Tomatoes",
+"Cucumber",
+"Lemon Vinaigrette"
+],
+"wholesaleCost": 5.10,
+"suggestedPrice": 14.00
+}
+]
