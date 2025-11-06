@@ -38,7 +38,27 @@ function getNewId() {
     return maxId + 1;
 }
 
+// Helper function to read all recipes from the JSON file
+const readRecipes = () => {
+    try {
+        const data = fs.readFileSync(recipePath, 'utf-8');
+        return JSON.parse(data);
+    } catch (err) {
+        return [];
+    }
+};
+
+
+let recipeData = readRecipes();
+if (recipeData == [])
+{
+    recipes = { Error: "Failed to load recipie file"};
+    console.error(`Error loading recipie file: ${error.message}`);
+}
+else
+    recipes = recipeData;
 //Load data
+/*
 try {
     const data = fs.readFileSync(recipePath, 'utf-8');
     recipes = JSON.parse(data);
@@ -48,6 +68,14 @@ catch (error) {
     recipes = { Error: "Failed to load recipie file"};
     console.error(`Error loading recipie file: ${error.message}`);
 }
+*/
+
+//EJS setup
+// Set the directory where Express should look for view files (templates)
+app.set('views', path.join(__dirname, 'views'));
+// Set EJS as the template engine
+app.set('view engine', 'ejs');
+
 
 // Express Setup ---
 // This all seems to be standard Express requirements
@@ -83,6 +111,21 @@ app.get('/', (request, response) => {
             "DELETE /recipes/:Id": "Delete a recipe by ID.",
             "DELETE /recipes/name/:Name": "Delete a recipe by Name."
         }
+    });
+});
+
+
+// GET /dashboard/recipes
+// Renders the dashboard page showing all recipes in a grid format
+app.get('/dashboard/recipes', (request, response) => {
+    // 1. Get the latest recipe data
+    const recipes = readRecipes();
+    console.log(`Load dashboard with ${recipes.length} items`);
+    // 2. Render the EJS file named 'recipes_grid.ejs'
+    // The second argument is an object containing the data to be passed to the template.
+    response.render('recipes_grid', { 
+        pageTitle: 'Recipe Management Dashboard', // Title for the HTML document
+        recipes: recipes // The array of recipe objects
     });
 });
 
@@ -143,7 +186,7 @@ router.get('/:Id', (request, response) => {
     response.status(200).json(recipe);
 });
 
-router.get('name/:Name', (request, response) => {
+router.get('/name/:Name', (request, response) => {
     const name = decodeURIComponent(request.params.Name); 
     const recipe = recipes.find(item => item.Name === name);
 
